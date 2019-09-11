@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
+
+
 class YUVHandler:
     def __init__(self, yuv_path = None, w = 0, h = 0, sampling = '420'):
         self.yuv_path = yuv_path
@@ -59,7 +61,7 @@ class YUVHandler:
 
         return self.Y, self.U, self.V
 
-    def get_single_frame(self, idx):
+    def get_single_frame(self):
         YUV, h, w = self.YUV, self.h, self.w
         subsample = 2 if self.sampling == '420' else 1
         px = w*h
@@ -78,9 +80,9 @@ class YUVHandler:
         cb_end = luma_end + (px//(subsample**2))
         cr_end = cb_end + (px//(subsample**2))
 
-        y = yuv_frame[i:luma_end].reshape(h,w)
-        U = yuv_frame[luma_end:cb_end].reshape(h//subsample,w//subsample)
-        V = yuv_frame[cb_end:cr_end].reshape(h//subsample,w//subsample)
+        y = yuv_frame[:luma_end].reshape(h,w)
+        u = yuv_frame[luma_end:cb_end].reshape(h//subsample,w//subsample)
+        v = yuv_frame[cb_end:cr_end].reshape(h//subsample,w//subsample)
 
 
         self.y, self.u, self.v = np.asarray(y), np.asarray(u), np.asarray(v)
