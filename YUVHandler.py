@@ -88,15 +88,15 @@ class YUVHandler:
         self.y, self.u, self.v = np.asarray(y), np.asarray(u), np.asarray(v)
         return self.y, self.u, self.v
 
-    def plot_frame(self, y, u = None, v = None, file = None):
+    def plot_frame(self, y, u = None, v = None, file_path = None):
         if u is not None and v is not None:
             yuv_rgb = self.to_RGB(y,u,v)
             plt.imshow(yuv_rgb)
         else:
             plt.imshow(y, cmap = 'gray')
 
-        if file:
-            plt.savefig(y)
+        if file_path:
+            plt.savefig(file_path)
         else:
             plt.show()
 
