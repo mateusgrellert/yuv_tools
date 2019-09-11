@@ -107,7 +107,6 @@ class YUVHandler:
         Vfull = np.repeat(v, 2,axis=0)
         Vfull = np.repeat(Vfull, 2,axis=1)
 
-        #yuv_ycbcr = np.concatenate((y,Ufull,Vfull[...,None]), axis = 2)
         yuv_ycbcr = np.stack((y, Ufull, Vfull), axis = 2)
 
         return Image.fromarray(yuv_ycbcr, mode = 'YCbCr').convert('RGB')
