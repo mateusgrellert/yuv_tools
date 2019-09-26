@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
+from copy import deepcopy
+from sklearn.feature_extraction import image
 
 
 class YUVHandler:
@@ -61,16 +62,18 @@ class YUVHandler:
 
         return self.Y, self.U, self.V
 
-    def get_single_frame(self):
-        YUV, h, w = self.YUV, self.h, self.w
+    def get_single_frame(self, index = -1):
+        yuv, h, w = self.yuv, self.h, self.w
         subsample = 2 if self.sampling == '420' else 1
         px = w*h
+        if index != -1:
+            pt = index * w * h * 3 / subsample
+            self.yuv_fp.seek(int(pt))
 
         frame_size = px + 2*(px//(subsample**2))
 
         if self.yuv_fp and frame_size:
-            self.yuv_frame = np.fromfile(self.yuv_fp,dtype='uint8', count = frame_size)
-            yuv_frame = self.yuv_frame
+            yuv = np.fromfile(self.yuv_fp,dtype='uint8', count = frame_size)
         else: return
 
 
@@ -80,13 +83,45 @@ class YUVHandler:
         cb_end = luma_end + (px//(subsample**2))
         cr_end = cb_end + (px//(subsample**2))
 
-        y = yuv_frame[:luma_end].reshape(h,w)
-        u = yuv_frame[luma_end:cb_end].reshape(h//subsample,w//subsample)
-        v = yuv_frame[cb_end:cr_end].reshape(h//subsample,w//subsample)
+        y = yuv[:luma_end].reshape(h,w)
+        u = yuv[luma_end:cb_end].reshape(h//subsample,w//subsample)
+        v = yuv[cb_end:cr_end].reshape(h//subsample,w//subsample)
 
 
         self.y, self.u, self.v = np.asarray(y), np.asarray(u), np.asarray(v)
         return self.y, self.u, self.v
+
+    def blockshaped(self, arr, nrows, ncols):
+        """
+        Return an array of shape (n, nrows, ncols) where
+        n * nrows * ncols = arr.size
+
+        If arr is a 2D array, the returned array should look like n subblocks with
+        each subblock preserving the "physical" layout of arr.
+        """
+        h, w = arr.shape
+        assert h % nrows == 0, "{} rows is not evenly divisble by {}".format(h, nrows)
+        assert w % ncols == 0, "{} cols is not evenly divisble by {}".format(w, ncols)
+        return (arr.reshape(h//nrows, nrows, -1, ncols)
+                   .swapaxes(1,2)
+                   .reshape(-1, nrows, ncols))
+
+    def get_luma_CTUs(self, frame = None, tam = 64, index = 0):
+        if frame is not None:
+            y = deepcopy(frame)
+        else:
+            y = deepcopy(self.y)
+
+        y = y[:self.h//tam*tam, :self.w//tam*tam]
+        
+        #y = image.extract_patches_2d(y, (tam,tam))
+        
+        y = self.blockshaped(y, tam, tam)
+
+        self.plot_frame(y[index])
+
+        return y
+
 
     def plot_frame(self, y, u = None, v = None, file_path = None):
         if u is not None and v is not None:
