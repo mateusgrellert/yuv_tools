@@ -146,3 +146,18 @@ class YUVHandler:
 
         return Image.fromarray(yuv_ycbcr, mode = 'YCbCr').convert('RGB')
 
+
+    def get_sobel_frame(self, frame):
+        sobelFrame = []
+        clip = 1
+        h,w = frame.shape
+        sobelFrame = cv2.Sobel(frame,cv2.CV_64F,1,1,ksize=3)  
+
+        return sobelFrame
+    
+    def get_SI(self, frame):
+        sob = self.get_sobel_frame(frame)
+        return sob.std()
+
+    def get_TI(self, frame_i, frame_ii):
+        return (frame_ii - frame_i).std()
